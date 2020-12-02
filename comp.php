@@ -66,6 +66,8 @@ function Decompress(string $filename, string $output = "f.txt")
     //rtrim($str,"\x00");
     while (substr($str,-1) == chr(1))
         $str = substr($str,0, strlen($str) - 1);
+    while (substr($str,-1) == chr(0))
+        $str = substr($str,0, strlen($str) - 1);
     fwrite($f,$str);
     imagedestroy($img);
 }
