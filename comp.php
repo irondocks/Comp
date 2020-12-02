@@ -38,7 +38,7 @@ function Compress(string $file, string $outputname)
     echo "Compressed....";
     $dim = $s . "x" . ($y+1) . "+256";
     exec("gm convert -colorspace gray -size $dim -depth 8 -colors 256 -define webp:lossless=true $outputname.png $outputname.webp");
-    //unlink("$outputname.png");
+    unlink("$outputname.png");
     imagedestroy($img);
 }
 
