@@ -3,12 +3,15 @@
 function Compress(string $file, string $outputname)
 {
     $m = 0;
-    $i = 25;
-    $s = 10000;
-    while (strlen($file)%$s > 0) $s--;
-    $img = imagecreatetruecolor((($s)),round(strlen($file)/$s)+5);
-    $black = imagecolorallocate($img, 1, 1, 1 );
-    imagefill($img, 0, 0, $black);
+    $s = 15000;
+    while ($s > strlen($file))
+    {
+        $s /= 2;
+        $s = floor($s);
+    }
+    $img = imagecreatetruecolor((($s)),15000);
+    $white = imagecolorallocate($img, 255, 255, 255);
+    imagefill($img, 0, 0, $white);
     $rr = 0;
     $y = 0;
     //imageantialias($img, false);
@@ -16,14 +19,14 @@ function Compress(string $file, string $outputname)
     while (strlen($file) > $m)
     {
         $r = ord($file[$m]);
-        $black = ($r << 16) + ($r << 8) + $r;
         $m += 1;
-        // $r = ord($file[$m]);
-        // $black = ($r << 8) + $black;
-        // $m += 1;
- 
-        imagesetpixel($img,$rr,$y,$black);
-        $rr++;
+        for ($x = 3 ; $x > 0 ; $x--)
+        {
+            $z = ($r%8) + 1;
+            imagesetpixel($img,$rr+$x-1,$y,$z);
+            $r >>= 3;
+        }
+        $rr+=3;
         
         if ($rr+1 >= (($s)))
         {
@@ -31,14 +34,14 @@ function Compress(string $file, string $outputname)
             $rr = 0;
         }
     }
-    $int = (($s));
+    $int = $s;
     $img = imagecrop($img,["x" => 0, "y" => 0, "width" => $int, "height" => ($y+1)]);
     imageantialias($img, false);
+    //imagefilter($img, IMG_FILTER_CONTRAST, -255);
     imagepng($img, "$outputname.png", 9);
     echo "Compressed....";
-    $dim = $s . "x" . ($y+1) . "+256";
-    exec("gm convert -colorspace gray -size $dim -depth 8 -colors 256 -define webp:lossless=true $outputname.png $outputname.webp");
-    unlink("$outputname.png");
+    exec("gm convert $outputname.png -define webp:lossless=true $outputname.webp");
+    // unlink("$outputname.png");
     imagedestroy($img);
 }
 
@@ -48,24 +51,32 @@ function Decompress(string $filename, string $output = "f.txt")
     $rr = 0;
     $y = 0;
     $f = fopen($output,"w");
-    $filestr = file_get_contents($filename);
-    $img = imagecreatefromstring($filestr);
-    $d = 0;
+    $i = 0;
+    echo "&&";
+    $img = imagecreatefrompng("$filename");
     while (imagesy($img) > $y)
     {
-
         while (imagesx($img) > $rr + 1) {
-            $rgb = imagecolorat($img,$rr,$y);
-            $b = chr($rgb & 0xFF);
+            $b = 0;
+            for ($x = 0 ; $x < 3 && $rr + $x + 1 < imagesx($img) ; $x++)
+            {
+                $rgb = imagecolorat($img,$rr+$x,$y);
+                $b <<= 3;
+                if ($rgb > 8 || $rgb == 0)
+                    continue;
+                $b += ($rgb - 1);
+            }
+            echo " " . ($b);
+            $b = chr($b%256);
             $str .= $b;
-            $rr++;
+            $rr += 3;
         }
         $rr = 0;
         $y++;
     }
-    //rtrim($str,"\x00");
-    while (substr($str,-1) == chr(1))
-        $str = substr($str,0, strlen($str) - 1);
+    // rtrim($str,"\x00");
+    // while (substr($str,-1) == chr(1))
+    //     $str = substr($str,0, strlen($str) - 1);
     while (substr($str,-1) == chr(0))
         $str = substr($str,0, strlen($str) - 1);
     fwrite($f,$str);
@@ -89,7 +100,7 @@ while (strlen($filestr) > 0)
     {
         Compress($filestr, "$d$c");
         $filestr = "";
-        Decompress("$d$c.webp","f.txt");
+        Decompress("$d$c.png","f.txt");
     }
     if (chr($x) == 'Z')
     {
