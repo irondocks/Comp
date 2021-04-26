@@ -4,18 +4,17 @@ $char_cnt = 64;
 
 function sequence(string $file)
 {
-//    global $char_cnt;
-//    return
+
     $file_c = str_split($file,1);
     $pairs = "";
     foreach ($file_c as $c) {
         $dcbn = decbin($c);
-        if (strlen($dcbn) <= 4) {
-            $dcbn = "1";
+        if (strlen(decbin($c)) <= 4) {
+            $dcbn = "1" . $dcbn;
             $dcbn .= str_repeat("0",5-strlen($dcbn));
         }
         else {
-            $dcbn = "0";
+            $dcbn = "0" . $dcbn;
             $dcbn .= str_repeat("0",9-strlen($dcbn));
         }
         $pairs = ($dcbn) . $pairs;
@@ -86,6 +85,7 @@ function dictionary(string $file, int $chars, &$fout)
             $x++;
         }
     }
+
     echo "\n3. Compressing Mathematically...";
 
     fwrite($fout, $total_str);
