@@ -1,24 +1,29 @@
 <?php
 
-$char_cnt = 5;
+$char_cnt = 64;
 
-function sequence(string $file, double $total_t = NULL)
+function sequence(string $file)
 {
-
+//    global $char_cnt;
+//    return
     $file_c = str_split($file,1);
-
-    $u  = 0;
-    $total_t = "";
-    foreach ($file_c as $c)
-    {
-        $total_t = decbin($c) . $total_t;
-        //$total_t += (ord($c) << (2**(8*$u)));
-        $u++;
+    $pairs = "";
+    foreach ($file_c as $c) {
+        $dcbn = decbin($c);
+        if (strlen($dcbn) <= 4) {
+            $dcbn = "1";
+            $dcbn .= str_repeat("0",5-strlen($dcbn));
+        }
+        else {
+            $dcbn = "0";
+            $dcbn .= str_repeat("0",9-strlen($dcbn));
+        }
+        $pairs = ($dcbn) . $pairs;
     }
-    $pairs = $total_t;
     return $pairs;
 }
 
+// NEEDS FULL REWRITE
 function unsequence(int $number, int $max)
 {
     global $char_cnt;
@@ -33,7 +38,7 @@ function unsequence(int $number, int $max)
     return implode($seq);
 }
 
-function dictionary(string $file, int $chars, $fout)
+function dictionary(string $file, int $chars, &$fout)
 {
 
     $pairs = [];
@@ -44,7 +49,8 @@ function dictionary(string $file, int $chars, $fout)
 
     $filemark = str_split($file, $xy);
 
-    foreach ($filemark as $file_i) {
+    foreach ($filemark as $file_i)
+    {
         $pairs[] = sequence($file_i);
     }
 
@@ -59,44 +65,42 @@ function dictionary(string $file, int $chars, $fout)
     $x = 0;
 
     $total_str = "";
-    foreach ($file_un as $a)
+
+    fwrite($fout, implode($file_un));
+    while ($x < count($pairs))
     {
-        $z = $a;
-        if ($a == $filemark[$x])
-            $num[] = -1;
-        else {
-            $num[] = $x;
+        foreach ($file_un as $a)
+        {
+            $z = $a;
+            if ($a == $pairs[$x]) {
+                $num[] = -1;
+                $num[] = $y;
+                $y++;
+            }
+            else {
+                $num[] = $x;
+                $y = 1;
+                $x++;
+                break;
+            }
             $x++;
         }
-        for ( ; strlen($z) > 8 ; )
-        {
-            $d = substr($z,0,8);
-            $total_str .= chr(bindec($d%256));
-            $z = substr($z,8);
-        }
-        $d = $z;
-        if (strlen($d) > 0)
-            $total_str .= chr(bindec($d%256));
-        $x++;
     }
-
     echo "\n3. Compressing Mathematically...";
-    $y++;
 
-    fwrite($fout,$total_str);
+    fwrite($fout, $total_str);
 
     output($fout, $pairs, $num);
 
     echo "\n4. Compression Complete\n";
-//    fclose($fout);
+
     return $fout;
 }
 
-function output($fout, array $pairs, array $nums)
+function output(&$fout, array $pairs, array $nums)
 {
-    $mns = 0;
     $order = 1;
-    $x = 0;
+
     $total_str = "";
     foreach ($nums as $d)
     {
@@ -109,16 +113,14 @@ function output($fout, array $pairs, array $nums)
             $total_str .= "|";
             for ( ; $z > 0 ; )
             {
-
-                $total_str .= chr($z%256);
+                $total_str .= chr(($z)%256);
                 $z >>= 8;
             }
             $z = $d;
             $total_str .= "|";
             for ( ; $z > 0 ; )
             {
-
-                $total_str .= chr($z%256);
+                $total_str .= chr(($z)%256);
                 $z >>= 8;
             }
             $order = 1;
@@ -129,68 +131,25 @@ function output($fout, array $pairs, array $nums)
 
 function Decompress(string $filename, string $output = "f.txt")
 {
-    $str = "";
-    $rr = 0;
-    $y = 0;
-    $f = fopen($output,"w");
-    $i = 0;
-    $img = imagecreatefrompng("$filename");
-    while (imagesy($img) > $y)
-    {
-        while (imagesx($img) > $rr + 1) {
-            $b = 0;
-            $x = 0;
-            $total_max = imagecolorat($img,$rr,$y);
-            $rr++;
-            for ($x = 0 ; $x < 3 && $rr + $x + 1 < imagesx($img) ; $x++)
-            {
-                $rgb = imagecolorat($img,$rr+$x,$y);
-                $b <<= 8;
-                $b += ($rgb - 1);
-            }
-            $str .= unsequence($b, $total_max);
-            $rr += $x;
-        }
-        $rr = 0;
-        $y++;
-    }
-
-    while (substr($str,-1) == chr(0))
-        $str = substr($str,0, strlen($str) - 1);
-
-    fwrite ($f,$str);
-    imagedestroy($img);
 
 }
 
 $filestr = file_get_contents($argv[1]);
-$x = 65;
-$d = 0;
-$c = "";
 $time = hrtime(true);
 file_put_contents($argv[2].".xiv","");
 $fout = fopen($argv[2].".xiv","w+");
 while (strlen($filestr) > 0)
 {
-    $c = chr($x);
     if (strlen($filestr) > 90000000)
     {
         $fout = dictionary(substr($filestr,0,90000000), $char_cnt, $fout);
         $filestr = substr($filestr,90000000);
-        //Decompress("$d$c.webp","f.txt");
     }
     else
     {
         $fout = dictionary($filestr, $char_cnt, $fout);
         $filestr = "";
-        //Decompress("$d$c.png","f.txt");
     }
-//    if (chr($x) == 'Z')
-//    {
-//        $x = 64;
-//        $d++;
-//    }
-//    $x++;
 }
 fclose($fout);
 echo "This file was compressed in ";
