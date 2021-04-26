@@ -1,6 +1,6 @@
 <?php
 
-$char_cnt = 5;
+$char_cnt = 12;
 
 function sequence(string $file)
 {
@@ -20,7 +20,13 @@ function sequence(string $file)
         }
         $pairs = ($dcbn) . $pairs;
     }
-    return $pairs;
+    $string = "";
+    while (strlen($pairs) > 0)
+    {
+        $string .= bindec(substr($pairs,0,8));
+        $pairs = substr($dcbn,8);
+    }
+    return $string;
 }
 
 // NEEDS FULL REWRITE
@@ -34,7 +40,6 @@ function unsequence(int $number, int $max)
         unshift($seq,$number%256);
         $number >>= 8;
     }
-
     return implode($seq);
 }
 
@@ -42,60 +47,46 @@ function dictionary(string $file, int $chars, &$fout)
 {
 
     $pairs = [];
-    global $char_cnt;
-    $xy = $char_cnt;
 
 //    echo "1. Creating Dictionary...";
 
-    $filemark = str_split($file, $xy);
+    $filemark = str_split($file, $chars);
 
     $rrr = [];
+    $num = [];
+    $x = 0;
     foreach ($filemark as $file_i)
     {
         $pair = sequence($file_i);
-        $rrr[] = $pair;
         $x = count($rrr);
-        $rrr = array_unique($rrr);
-        $num[] = ($x + 1 == count($rrr)) ? -1 : count($rrr);
+        if (!in_array($pair,$rrr)) {
+            $rrr[] = $pair;
+        }
+        $num[] = ($x == count($rrr)) ? array_search($pair, $rrr): -1;
     }
 
     echo ".";
 //    echo "\n2. Writing Dictionary...";
 
-    $num = [];
     $y = 0;
-    fwrite($fout, implode($rrr));
-    unset($imp);
-//    while (count($num) < count($pairs))
-//    {
-//        foreach ($pairs as $a)
-//        {
-//            if (($a) == $file_un[$y%(count($file_un) + 1)]) {
-//                $num[] = -1;
-//                $y++;
-//            }
-//            else
-//            {
-//                $x = -1;
-//                $y++;
-//                foreach($file_un as $b)
-//                {
-//                    if ($b == $a)
-//                    {
-//                        $num[] = $x + 1;
-//                        break;
-//                    }
-//                    $x++;
-//                }
-//            }
-//            if ($x >= 0)
-//                break;
-//        }
-//    }
+    $hhh = "";
+    $total_str = "";
+    for ($i = 0 ; $i < count($rrr) ; $i++)
+    {
+        $z = $rrr[$i];
+//        var_dump($rrr[$i]);
+//        for ( ; strlen($z) > 0 ; )
+        {
+//            $d = substr($z,0,8);
+            $total_str .= $z;
+//            $z = substr($z,8);
+        }
+    }
+    unset($rrr);
+//    echo count($rrr);
+    fwrite($fout, $total_str);
 
 //    echo "\n3. Compressing Mathematically...";
-//
-//    unset($pairs);
 
     output($fout, $num);
 
@@ -113,26 +104,17 @@ function output(&$fout, array $nums)
     {
         if ($d == -1) {
             $order++;
-            continue;
         }
         else {
             $z = $order;
-            $total_str .= "|";
             for ( ; $z > 0 ; )
             {
-                $total_str .= chr(($z)%256);
+                $total_str .= (($z)%256);
                 $z >>= 8;
             }
-            if ($order == 1) {
-                continue;
-            }
-            $z = $d;
-            $total_str .= "|";
-            for ( ; $z > 0 ; )
-            {
-                $total_str .= chr(($z)%256);
-                $z >>= 8;
-            }
+            $total_str .= "?";
+
+            $total_str .= "$d|";
             $order = 0;
         }
     }
@@ -150,10 +132,10 @@ file_put_contents($argv[2].".xiv","");
 $fout = fopen($argv[2].".xiv","w+");
 while (strlen($filestr) > 0)
 {
-    if (strlen($filestr) > 500000)
+    if (strlen($filestr) > 100000000)
     {
-        $fout = dictionary(substr($filestr,0,500000), $char_cnt, $fout);
-        $filestr = substr($filestr,500000);
+        $fout = dictionary(substr($filestr,0,100000000), $char_cnt, $fout);
+        $filestr = substr($filestr,100000000);
     }
     else
     {
