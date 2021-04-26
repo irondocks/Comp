@@ -57,8 +57,8 @@ function dictionary(string $file, int $chars, &$fout)
         $x = count($rrr);
         $rrr = array_unique($rrr);
         $num[] = ($x + 1 == count($rrr)) ? -1 : count($rrr);
-
     }
+
     echo ".";
 //    echo "\n2. Writing Dictionary...";
 
