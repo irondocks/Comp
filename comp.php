@@ -1,6 +1,6 @@
 <?php
 
-$char_cnt = 3;
+$char_cnt = 6;
 
 function sequence(string $file, double $total_t = NULL)
 {
@@ -63,26 +63,27 @@ function dictionary(string $file, int $chars, $fout)
 
     $x = 0;
     $total_str = "";
-    foreach ($file_un as $a)
+//    while ($x < count($filemark))
     {
-        $z = $a;
-        $total_str .= $z;
-
-        if ($a != $filemark[$x])
-            $num[] = -1;
-        else {
-            $num[] = $x;
-            continue;
+        foreach ($filemark as $a)
+        {
+            $z = $a;
+//            $total_str .= $z;
+            if ($a == $file_un[$x])
+                $num[] = -2;
+            else {
+                $num[] = array_search($a, $file_un);
+            }
         }
-        $x++;
     }
-
-    fwrite($fout,$total_str);
+    fwrite($fout,implode($file_un));
 
     echo "\n3. Compressing Mathematically...";
     $y++;
 
-    output($fout, $pairs, $num);
+
+
+    output($fout, $filemark, $num);
 
     echo "\n4. Compression Complete\n";
 //    fclose($fout);
@@ -97,9 +98,8 @@ function output($fout, array $pairs, array $nums)
     $total_str = "";
     foreach ($pairs as $d)
     {
-        if ($nums == -1) {
+        if ($nums == -2) {
             $order++;
-            continue;
         }
         else {
             $z = $order;
@@ -109,7 +109,7 @@ function output($fout, array $pairs, array $nums)
 //                fwrite($fout,chr($z%256));
                 $z >>= 8;
             }
-            $z = $d;
+            $z = $mns;
             for ( ; strlen($z) > 8 ; )
             {
                 $d = substr($z,0,8);
