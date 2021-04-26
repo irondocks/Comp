@@ -1,6 +1,6 @@
 <?php
 
-$char_cnt = 12;
+$char_cnt = 24;
 
 function sequence(string $file)
 {
@@ -62,6 +62,7 @@ function dictionary(string $file, int $chars, &$fout)
         if (!in_array($pair,$rrr)) {
             $rrr[] = $pair;
         }
+    //      Was $rrr appended to?    No? Where is the match?      Yes? This will be ordinal anyway, so, -1
         $num[] = ($x == count($rrr)) ? array_search($pair, $rrr): -1;
     }
 
