@@ -1,6 +1,6 @@
 <?php
 
-$char_cnt = 6;
+$char_cnt = 5;
 
 function sequence(string $file, double $total_t = NULL)
 {
@@ -11,13 +11,8 @@ function sequence(string $file, double $total_t = NULL)
     $total_t = "";
     foreach ($file_c as $c)
     {
-
-        $d = decbin($c);
-        $x = strlen($d);
-        $d = str_repeat('0',8-$x) . $d;
-        $d = substr($d,0,8);
-        $total_t = $d . $total_t;
-
+        $total_t = decbin($c) . $total_t;
+        //$total_t += (ord($c) << (2**(8*$u)));
         $u++;
     }
     $pairs = $total_t;
@@ -49,41 +44,48 @@ function dictionary(string $file, int $chars, $fout)
 
     $filemark = str_split($file, $xy);
 
-//    foreach ($filemark as $file_i) {
-//        $pairs[] = sequence($file_i);
-//    }
+    foreach ($filemark as $file_i) {
+        $pairs[] = sequence($file_i);
+    }
 
     $rr = 0;
     $y = 0;
     $rh = 0;
 
-    $file_un = array_unique($filemark);
+    $file_un = array_unique($pairs);
 
     echo "\n2. Writing Dictionary...";
 
     $x = 0;
+
     $total_str = "";
-//    while ($x < count($filemark))
+    foreach ($file_un as $a)
     {
-        foreach ($filemark as $a)
-        {
-            $z = $a;
-//            $total_str .= $z;
-            if ($a == $file_un[$x])
-                $num[] = -2;
-            else {
-                $num[] = array_search($a, $file_un);
-            }
+        $z = $a;
+        if ($a == $filemark[$x])
+            $num[] = -1;
+        else {
+            $num[] = $x;
+            $x++;
         }
+        for ( ; strlen($z) > 8 ; )
+        {
+            $d = substr($z,0,8);
+            $total_str .= chr(bindec($d%256));
+            $z = substr($z,8);
+        }
+        $d = $z;
+        if (strlen($d) > 0)
+            $total_str .= chr(bindec($d%256));
+        $x++;
     }
-    fwrite($fout,implode($file_un));
 
     echo "\n3. Compressing Mathematically...";
     $y++;
 
+    fwrite($fout,$total_str);
 
-
-    output($fout, $filemark, $num);
+    output($fout, $pairs, $num);
 
     echo "\n4. Compression Complete\n";
 //    fclose($fout);
@@ -96,34 +98,33 @@ function output($fout, array $pairs, array $nums)
     $order = 1;
     $x = 0;
     $total_str = "";
-    foreach ($pairs as $d)
+    foreach ($nums as $d)
     {
-        if ($nums == -2) {
+        if ($d == -1) {
             $order++;
+            continue;
         }
         else {
             $z = $order;
-            for ( ; $z > 0 ; $x++)
+            $total_str .= "|";
+            for ( ; $z > 0 ; )
             {
-                $total_str .= chr(bindec($z%256));
-//                fwrite($fout,chr($z%256));
+
+                $total_str .= chr($z%256);
                 $z >>= 8;
             }
-            $z = $mns;
-            for ( ; strlen($z) > 8 ; )
+            $z = $d;
+            $total_str .= "|";
+            for ( ; $z > 0 ; )
             {
-                $d = substr($z,0,8);
-                $total_str .= chr(bindec($d%256));
-//                fwrite($fout,chr(bindec($d%256)));
-                $z = substr($z,8);
+
+                $total_str .= chr($z%256);
+                $z >>= 8;
             }
-            $total_str .= ""; //chr(bindec($d%256));
-//            fwrite($fout,"||");
             $order = 1;
         }
-        $mns++;
     }
-    fwrite($fout,$total_str);//chr($z%256));
+    fwrite($fout,$total_str);
 }
 
 function Decompress(string $filename, string $output = "f.txt")
@@ -172,10 +173,10 @@ $fout = fopen($argv[2].".xiv","w+");
 while (strlen($filestr) > 0)
 {
     $c = chr($x);
-    if (strlen($filestr) > 110000000)
+    if (strlen($filestr) > 90000000)
     {
-        $fout = dictionary(substr($filestr,0,110000000), $char_cnt, $fout);
-        $filestr = substr($filestr,110000000);
+        $fout = dictionary(substr($filestr,0,90000000), $char_cnt, $fout);
+        $filestr = substr($filestr,90000000);
         //Decompress("$d$c.webp","f.txt");
     }
     else
