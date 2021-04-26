@@ -21,11 +21,12 @@ function sequence(string $file)
         $pairs = ($dcbn) . $pairs;
     }
     $string = "";
-    while (strlen($pairs) > 0)
+    while (strlen($pairs) > 8)
     {
-        $string .= bindec(substr($pairs,0,8));
-        $pairs = substr($dcbn,8);
+        $string .= chr(bindec(substr($pairs,0,8)));
+        $pairs = substr($pairs,8);
     }
+    $string .= chr(bindec($pairs));
     return $string;
 }
 
@@ -48,7 +49,7 @@ function dictionary(string $file, int $chars, &$fout)
 
     $pairs = [];
 
-//    echo "1. Creating Dictionary...";
+    echo "1. Creating Dictionary...";
 
     $filemark = str_split($file, $chars);
 
@@ -67,31 +68,24 @@ function dictionary(string $file, int $chars, &$fout)
     }
 
     echo ".";
-//    echo "\n2. Writing Dictionary...";
+    echo "\n2. Writing Dictionary...";
 
     $y = 0;
     $hhh = "";
     $total_str = "";
     for ($i = 0 ; $i < count($rrr) ; $i++)
     {
-        $z = $rrr[$i];
-//        var_dump($rrr[$i]);
-//        for ( ; strlen($z) > 0 ; )
-        {
-//            $d = substr($z,0,8);
-            $total_str .= $z;
-//            $z = substr($z,8);
-        }
+        $total_str .= $rrr[$i];
     }
     unset($rrr);
-//    echo count($rrr);
+
     fwrite($fout, $total_str);
 
-//    echo "\n3. Compressing Mathematically...";
+    echo "\n3. Compressing Mathematically...";
 
     output($fout, $num);
 
-//    echo "\n4. Compression Complete\n";
+    echo "\n4. Compression Complete\n";
 
     return $fout;
 }
@@ -133,10 +127,10 @@ file_put_contents($argv[2].".xiv","");
 $fout = fopen($argv[2].".xiv","w+");
 while (strlen($filestr) > 0)
 {
-    if (strlen($filestr) > 100000000)
+    if (strlen($filestr) > 10000000)
     {
-        $fout = dictionary(substr($filestr,0,100000000), $char_cnt, $fout);
-        $filestr = substr($filestr,100000000);
+        $fout = dictionary(substr($filestr,0,10000000), $char_cnt, $fout);
+        $filestr = substr($filestr,10000000);
     }
     else
     {
