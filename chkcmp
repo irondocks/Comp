@@ -1,0 +1,154 @@
+<?php
+
+$char_cnt = 64;
+
+function sequence(string $file)
+{
+//    global $char_cnt;
+//    return
+    $file_c = str_split($file,64);
+    $pairs = "";
+    foreach ($file_c as $k => $c) {
+        $i = 0;
+        $d = 0;
+        while (strlen($c) > $i)
+        {
+            // $d <<= 8;
+            $d .= decbin(ord($c[$i]));
+            $i++;
+        }
+        // $dcn = decbin($d);
+        $dcn = str_split($d,8);
+        foreach ($dcn as $fff => $nnn)
+        {
+            $dcbn = (bindec($nnn) < 8) ? "1" . str_repeat("0",4-strlen(substr($nnn,0,3))) : "0" . str_repeat("0",9-strlen($nnn));
+            $pairs .= $dcbn;
+        }
+    }
+    $sequencer_array = str_split($pairs,8);
+    $sequencer_str = "";
+    foreach ($sequencer_array as $c)
+    {
+        $sequencer_str .= chr(bindec($c));
+    }
+    return $sequencer_str;
+}
+
+// NEEDS FULL REWRITE
+function unsequence(int $number, int $max)
+{
+    global $char_cnt;
+    $seq = [];
+
+    while (count($seq) < $char_cnt)
+    {
+        unshift($seq,$number%256);
+        $number >>= 8;
+    }
+
+    return implode($seq);
+}
+
+function dictionary(string $file, int $chars, &$fout)
+{
+
+    $pairs = [];
+
+    // echo ".";//. Creating Dictionary...";
+
+    $filemark = str_split($file, $chars);
+
+    $rrr = [];
+    $num = [];
+    $x = 0;
+    foreach ($filemark as $file_i)
+    {
+        $pair = sequence($file_i);
+        $x = count($rrr);
+        if (!in_array($pair,$rrr)) {
+            $rrr[] = $pair;
+        }
+    //  Was $rrr appended to?    No? Where is the match?      Yes? This will be ordinal anyway, so, -1
+        $num[] = ($x == count($rrr)) ? array_search($pair, $rrr): -1;
+    }
+
+    // echo "2";//. Writing Dictionary...";
+
+    $y = 0;
+    $hhh = "";
+    $total_str = "";
+    // Write dictionary as collection of strings
+
+    $total_str = implode("",$rrr);
+
+    unset($rrr);
+
+    fwrite($fout, $total_str);
+
+    // echo "3";//. Compressing Mathematically...";
+
+    output($fout, $num);
+
+    echo ".";//. Compression Complete\n";
+
+    return $fout;
+}
+
+function output(&$fout, array $nums)
+{
+    $order = 0;
+
+    $total_str = "";
+    foreach ($nums as $d)
+    {
+        if ($d == -1) {
+            $order++;
+        }
+        else {
+
+            $total_str .= "?";
+
+            while ($order > 0)
+            {
+                $total_str .= chr(($order)%256);
+                $order >>= 8;
+            }
+            
+            $total_str .= "|";
+            while ($d > 0)
+            {
+                $total_str .= chr($d%256);
+                $d >>= 8;
+            }
+        }
+    }
+    fwrite($fout,$total_str);
+}
+
+function Decompress(string $filename, string $output = "f.txt")
+{
+
+}
+
+$filestr = file_get_contents($argv[1]);
+$time = hrtime(true);
+//file_put_contents($argv[2].".xiv","");
+$fout = fopen($argv[2].".xiv","w");
+while (strlen($filestr) > 0)
+{
+    if (strlen($filestr) > 1500000)
+    {
+        $fout = dictionary(substr($filestr,0,1500000), $char_cnt, $fout);
+        $filestr = substr($filestr,1500000);
+    }
+    else
+    {
+        $fout = dictionary($filestr, $char_cnt, $fout);
+        $filestr = "";
+    }
+}
+fclose($fout);
+echo "This file was compressed in ";
+echo date("i:s",((hrtime(true) - $time) / 1000000000));
+echo "\ndone\n";
+?>
