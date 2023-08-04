@@ -6,26 +6,24 @@ function sequence(string $file)
 {
 //    global $char_cnt;
 //    return
-    $file_c = str_split($file,64);
-    $pairs = "";
-    foreach ($file_c as $k => $c) {
-        $i = 0;
-        $d = 0;
-        while (strlen($c) > $i)
-        {
-            // $d <<= 8;
-            $d .= decbin(ord($c[$i]));
-            $i++;
-        }
-        // $dcn = decbin($d);
-        $dcn = str_split($d,8);
-        foreach ($dcn as $fff => $nnn)
-        {
-            $dcbn = (bindec($nnn) < 8) ? "1" . str_repeat("0",4-strlen(substr($nnn,0,3))) : "0" . str_repeat("0",9-strlen($nnn));
-            $pairs .= $dcbn;
-        }
+    $c = $file; str_split($file,strlen($file));
+    $i = 0;
+    $d = "";
+    while (strlen($c) > $i)
+    {
+        // $d <<= 8;
+        $d .= decbin(ord($c[$i]));
+        $i++;
     }
-    $sequencer_array = str_split($pairs,8);
+    // $dcn = decbin($d);
+    $dcn = str_split($d,8);
+    $bits = "";
+    foreach ($dcn as $nnn)
+    {
+        $dcbn = (strlen($nnn) < 4) ? "1" . str_repeat("0",4-strlen(substr($nnn,0,3))) : "0" . str_repeat("0",9-strlen($nnn));
+        $bits .= $dcbn;
+    }
+    $sequencer_array = str_split($bits,8);
     $sequencer_str = "";
     foreach ($sequencer_array as $c)
     {
@@ -51,28 +49,23 @@ function unsequence(int $number, int $max)
 
 function dictionary(string $file, int $chars, &$fout)
 {
-
-    $pairs = [];
-
-    // echo ".";//. Creating Dictionary...";
-
     $filemark = str_split($file, $chars);
 
     $rrr = [];
     $num = [];
-    $x = 0;
-    foreach ($filemark as $file_i)
+    foreach ($filemark as $key => $file_i)
     {
         $pair = sequence($file_i);
-        $x = count($rrr);
-        if (!in_array($pair,$rrr)) {
+        if (!in_array($pair,$rrr))
+        {
             $rrr[] = $pair;
+            $num[] = 130;
         }
-    //  Was $rrr appended to?    No? Where is the match?      Yes? This will be ordinal anyway, so, -1
-        $num[] = ($x == count($rrr)) ? array_search($pair, $rrr): 130;
+        else
+        {
+            $num[] = array_search($pair, $rrr);
+        }
     }
-
-    // echo "2";//. Writing Dictionary...";
 
     $y = 0;
     $hhh = "";
@@ -85,11 +78,9 @@ function dictionary(string $file, int $chars, &$fout)
 
     fwrite($fout, $total_str);
 
-    // echo "3";//. Compressing Mathematically...";
-
     output($fout, $num);
 
-    echo ".";//. Compression Complete\n";
+    echo ".";
 
     return $fout;
 }
@@ -108,7 +99,7 @@ function output(&$fout, array $nums)
         }
         else {
 
-            $total_str .= "?";
+            $total_str .= ($order == 0) ? "?" : "&";
 
             while ($order > 0)
             {
@@ -116,12 +107,8 @@ function output(&$fout, array $nums)
                 $order >>= 8;
             }
             
-            $total_str .= "|";
-            while ($d > 0)
-            {
-                $total_str .= chr($d%256);
-                $d >>= 8;
-            }
+            // if there is a mark here, print '%x'
+            $total_str .= ($d == 130) ? "\\" : chr($d);
         }
     }
     fwrite($fout,$total_str);
