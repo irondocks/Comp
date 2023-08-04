@@ -42,8 +42,8 @@ function unsequence(int $number, int $max)
 
     while (count($seq) < $char_cnt)
     {
-        unshift($seq,$number%256);
-        $number >>= 8;
+        unshift($seq,$number%128);
+        $number >>= 7;
     }
 
     return implode($seq);
@@ -69,7 +69,7 @@ function dictionary(string $file, int $chars, &$fout)
             $rrr[] = $pair;
         }
     //  Was $rrr appended to?    No? Where is the match?      Yes? This will be ordinal anyway, so, -1
-        $num[] = ($x == count($rrr)) ? array_search($pair, $rrr): -1;
+        $num[] = ($x == count($rrr)) ? array_search($pair, $rrr): 130;
     }
 
     // echo "2";//. Writing Dictionary...";
@@ -101,7 +101,9 @@ function output(&$fout, array $nums)
     $total_str = "";
     foreach ($nums as $d)
     {
-        if ($d == -1) {
+        // When $d == 130, the next vector of the dictionary is used.
+        // this slates the tree to use the minimum of alloted bytes
+        if ($d == 130) {
             $order++;
         }
         else {
